@@ -22,6 +22,7 @@ interface UploadModalState {
   isLoading: boolean;
   error: string | null;
   success: boolean;
+  uploadType: 'csv' | 'json' | null;
 }
 
 function App() {
@@ -42,7 +43,8 @@ function App() {
     isOpen: false,
     isLoading: false,
     error: null,
-    success: false
+    success: false,
+    uploadType: null
   });
 
   // Available sensor data fields that can be displayed
@@ -292,6 +294,117 @@ function App() {
     }
   };
 
+  // Handle JSON file upload
+  const handleJSONUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+    // Prevent default form submission behavior
+    e.preventDefault();
+    
+    // Get the file input element and selected file
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = fileInput.files?.[0];
+    
+    // Validate that a file has been selected
+    if (!file) {
+      setUploadModal(prev => ({
+        ...prev,
+        error: "Please select a JSON file to upload"
+      }));
+      return;
+    }
+
+    // Reset modal state and show loading indicator
+    setUploadModal(prev => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+      success: false
+    }));
+
+    try {
+      console.log('Uploading JSON file:', file.name, 'size:', file.size, 'type:', file.type);
+      
+      // Read the file contents
+      const reader = new FileReader();
+      
+      // Define what happens on file load
+      reader.onload = async (event) => {
+        try {
+          // Parse the JSON data
+          const jsonData = JSON.parse(event.target?.result as string);
+          
+          // Send the data to the API
+          const uploadUrl = 'http://localhost:8080/api/upload-json';
+          
+          const response = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(jsonData),
+          });
+
+          // Get response text
+          const responseText = await response.text();
+          console.log('Response text:', responseText);
+          
+          if (!response.ok) {
+            console.error('Server response:', responseText);
+            
+            // Parse error message
+            let errorMessage = 'Error uploading JSON';
+            try {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.message || 'Unknown server error';
+            } catch (parseError) {
+              errorMessage = responseText.length > 100 
+                ? `${responseText.substring(0, 100)}...` 
+                : responseText;
+            }
+            
+            throw new Error(errorMessage);
+          }
+          
+          // Update modal state on success
+          setUploadModal(prev => ({
+            ...prev,
+            isLoading: false,
+            success: true
+          }));
+
+          // Refresh data after successful upload
+          fetchObjectIds();
+        } catch (error) {
+          console.error('JSON processing error:', error);
+          setUploadModal(prev => ({
+            ...prev,
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to process JSON file'
+          }));
+        }
+      };
+      
+      // Define error handler
+      reader.onerror = () => {
+        setUploadModal(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Error reading the JSON file'
+        }));
+      };
+      
+      // Read the file as text
+      reader.readAsText(file);
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadModal(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      }));
+    }
+  };
+
   // Transform sensor data into chart-compatible format
   const filterAndPrepareData = () => {
     if (selectedFields.length === 0 || allSensorData.length === 0) {
@@ -411,12 +524,13 @@ function App() {
   };
 
   // Open CSV upload modal
-  const openUploadModal = () => {
+  const openUploadModal = (type: 'csv' | 'json') => {
     setUploadModal({
       isOpen: true,
       isLoading: false,
       error: null,
-      success: false
+      success: false,
+      uploadType: type
     });
   };
 
@@ -426,7 +540,8 @@ function App() {
       isOpen: false,
       isLoading: false,
       error: null,
-      success: false
+      success: false,
+      uploadType: null
     });
   };
 
@@ -438,7 +553,7 @@ function App() {
       <div className="modal-overlay">
         <div className="modal-container">
           <div className="modal-header">
-            <h3>Upload CSV Data</h3>
+            <h3>Upload {uploadModal.uploadType === 'csv' ? 'CSV' : 'JSON'} Data</h3>
             <button 
               className="modal-close-button" 
               onClick={closeUploadModal}
@@ -456,7 +571,7 @@ function App() {
             
             {uploadModal.success && (
               <div className="success-message">
-                <p>CSV file uploaded successfully!</p>
+                <p>{uploadModal.uploadType === 'csv' ? 'CSV' : 'JSON'} file uploaded successfully!</p>
               </div>
             )}
             
@@ -467,11 +582,14 @@ function App() {
               </div>
             ) : (
               <div className="file-upload-container">
-                <p>Select a CSV file containing sensor data to upload:</p>
-                <form onSubmit={handleCSVUpload} encType="multipart/form-data">
+                <p>Select a {uploadModal.uploadType === 'csv' ? 'CSV' : 'JSON'} file containing sensor data to upload:</p>
+                <form 
+                  onSubmit={uploadModal.uploadType === 'csv' ? handleCSVUpload : handleJSONUpload} 
+                  encType={uploadModal.uploadType === 'csv' ? "multipart/form-data" : "application/json"}
+                >
                   <input 
                     type="file" 
-                    accept=".csv" 
+                    accept={uploadModal.uploadType === 'csv' ? ".csv" : ".json"} 
                     onChange={handleFileChange}
                     className="file-input"
                     required
@@ -480,23 +598,42 @@ function App() {
                     Upload File
                   </button>
                 </form>
-                <div className="file-format-info">
-                  <p>The CSV file should include these required fields:</p>
-                  <ul className="csv-requirements">
-                    <li><strong>timestamp</strong> - Format: YYYY-MM-DDThh:mm:ssZ</li>
-                    <li><strong>object_id</strong> - Sensor object identifier</li>
-                    <li><strong>port_num</strong> - Port number</li>
-                    <li><strong>voltage</strong> - Voltage reading</li>
-                    <li><strong>current</strong> - Current reading</li>
-                  </ul>
-                  <a 
-                    href="#" 
-                    className="sample-csv-link"
-                    onClick={downloadSampleCSV}
-                  >
-                    Download sample CSV template
-                  </a>
-                </div>
+                {uploadModal.uploadType === 'csv' && (
+                  <div className="file-format-info">
+                    <p>The CSV file should include these required fields:</p>
+                    <ul className="csv-requirements">
+                      <li><strong>timestamp</strong> - Format: YYYY-MM-DDThh:mm:ssZ</li>
+                      <li><strong>object_id</strong> - Sensor object identifier</li>
+                      <li><strong>port_num</strong> - Port number</li>
+                      <li><strong>voltage</strong> - Voltage reading</li>
+                      <li><strong>current</strong> - Current reading</li>
+                    </ul>
+                    <a 
+                      href="#" 
+                      className="sample-csv-link"
+                      onClick={downloadSampleCSV}
+                    >
+                      Download sample CSV template
+                    </a>
+                  </div>
+                )}
+                {uploadModal.uploadType === 'json' && (
+                  <div className="file-format-info">
+                    <p>The JSON file should be an array of objects with these required fields:</p>
+                    <ul className="json-requirements">
+                      <li><strong>timestamp</strong> - Format: "2023-09-01T10:00:00Z"</li>
+                      <li><strong>object_id</strong> - Numeric sensor object identifier</li>
+                      <li><strong>port_num</strong> - Numeric port number</li>
+                    </ul>
+                    <a 
+                      href="#" 
+                      className="sample-json-link"
+                      onClick={downloadSampleJSON}
+                    >
+                      Download sample JSON template
+                    </a>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -534,6 +671,73 @@ function App() {
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', 'sample-sensor-data.csv');
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Function to generate and download a sample JSON file
+  const downloadSampleJSON = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    
+    // Create sample data with required fields and example rows
+    const jsonData = [
+      {
+        "timestamp": "2023-09-01T10:00:00Z",
+        "object_id": 1,
+        "port_num": 1,
+        "voltage": 12.5,
+        "current": 2.3,
+        "supply_current": 1.8,
+        "supply_volt": 24.0,
+        "voltage_drop": 0.5,
+        "voc": 14.2,
+        "state": 1,
+        "controller_error": 0.02,
+        "ai1": 0.5,
+        "ai2": 0.8,
+        "ai3": 1.2,
+        "ai4": 0.3,
+        "ai5": 0.7,
+        "fw_version": "v1.2.3",
+        "q_charge": 85.6,
+        "voltage_set_point": 12.8,
+        "command": 1,
+        "target_q": 90.0,
+        "vendor_id": "VENDOR123",
+        "step_number": 1,
+        "lite_id": "LITE001",
+        "voc_mode": 1,
+        "read_error": false,
+        "target_voc": 14.5,
+        "voc_state": 1,
+        "voc_exit": 0
+      },
+      {
+        "timestamp": "2023-09-01T10:05:00Z",
+        "object_id": 1,
+        "port_num": 1,
+        "voltage": 12.4,
+        "current": 2.4,
+        "supply_current": 1.9,
+        "supply_volt": 24.1,
+        "voltage_drop": 0.6,
+        "voc": 14.3
+      }
+    ];
+    
+    // Create a blob from the JSON string with pretty formatting
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'sample-sensor-data.json');
     document.body.appendChild(link);
     link.click();
     
@@ -583,12 +787,20 @@ function App() {
             </div>
 
             <div className="upload-csv-container">
-              <button 
-                className="upload-button" 
-                onClick={openUploadModal}
-              >
-                Upload CSV Data
-              </button>
+              <div className="upload-buttons">
+                <button 
+                  className="upload-button upload-csv" 
+                  onClick={() => openUploadModal('csv')}
+                >
+                  Upload CSV Data
+                </button>
+                <button 
+                  className="upload-button upload-json" 
+                  onClick={() => openUploadModal('json')}
+                >
+                  Upload JSON Data
+                </button>
+              </div>
             </div>
           </div>
 

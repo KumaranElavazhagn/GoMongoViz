@@ -539,33 +539,139 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 
 /* Upload button styles */
 .upload-csv-container {
-  margin-top: 20px;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.upload-buttons {
   display: flex;
-  justify-content: center;
+  flex-direction: row;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .upload-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 42px;
+}
+
+.upload-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.upload-csv {
+  background-color: var(--primary-color);
+}
+
+.upload-json {
+  background-color: #2a7d4f; /* Green color for JSON upload */
+}
+
+.upload-json:hover {
+  background-color: #21663f;
+}
+
+/* JSON requirements list styling */
+.json-requirements {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.json-requirements li {
+  margin-bottom: 0.3rem;
+}
+
+.sample-json-link {
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.sample-json-link:hover {
+  text-decoration: underline;
+}
+
+/* Add this at the appropriate location in your CSS file */
+
+.sample-csv-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 5px 0;
+  position: relative;
+}
+
+.sample-csv-link:hover {
+  color: #2c6cb7;
+  text-decoration: underline;
+}
+
+.sample-csv-link:before {
+  content: "📄";
+  margin-right: 5px;
+}
+
+/* CSV Requirements List */
+.csv-requirements {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0 15px 0;
+  text-align: left;
+}
+
+.csv-requirements li {
+  padding: 5px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.csv-requirements li:last-child {
+  border-bottom: none;
+}
+
+.csv-requirements strong {
+  color: #4a90e2;
+  margin-right: 5px;
+}
+
+.upload-submit-button {
   background-color: #4a90e2;
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 10px 15px;
-  font-weight: 500;
+  padding: 8px 16px;
+  margin-top: 10px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  font-weight: 500;
   transition: background-color 0.2s;
-  width: 100%;
+  margin-left: 30px
 }
 
-.upload-button:hover {
-  background-color: #3a7bc8;
+.upload-submit-button:hover {
+  background-color: #357abf;
 }
 
-.upload-button:active {
-  background-color: #2c6cb7;
+.upload-submit-button:active {
+  background-color: #2a609c;
 }
 
 /* Modal styles */
@@ -720,70 +826,4 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-/* Add this at the appropriate location in your CSS file */
-
-.sample-csv-link {
-  display: inline-block;
-  margin-top: 10px;
-  color: #4a90e2;
-  text-decoration: none;
-  font-weight: 500;
-  padding: 5px 0;
-  position: relative;
-}
-
-.sample-csv-link:hover {
-  color: #2c6cb7;
-  text-decoration: underline;
-}
-
-.sample-csv-link:before {
-  content: "📄";
-  margin-right: 5px;
-}
-
-/* CSV Requirements List */
-.csv-requirements {
-  list-style-type: none;
-  padding: 0;
-  margin: 10px 0 15px 0;
-  text-align: left;
-}
-
-.csv-requirements li {
-  padding: 5px 0;
-  font-size: 14px;
-  border-bottom: 1px solid #eee;
-}
-
-.csv-requirements li:last-child {
-  border-bottom: none;
-}
-
-.csv-requirements strong {
-  color: #4a90e2;
-  margin-right: 5px;
-}
-
-.upload-submit-button {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  margin-top: 10px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  margin-left: 30px
-}
-
-.upload-submit-button:hover {
-  background-color: #357abf;
-}
-
-.upload-submit-button:active {
-  background-color: #2a609c;
 }

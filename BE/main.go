@@ -73,7 +73,8 @@ func main() {
 	// Special handling for the upload endpoint
 	// For file uploads, we need to handle both POST and OPTIONS methods
 	// OPTIONS is used for CORS preflight requests from the browser
-	api.HandleFunc("/upload", h.UploadCSV).Methods("POST", "OPTIONS") // Upload and process CSV data
+	api.HandleFunc("/upload", h.UploadCSV).Methods("POST", "OPTIONS")       // Upload and process CSV data
+	api.HandleFunc("/upload-json", h.UploadJSON).Methods("POST", "OPTIONS") // Upload and process JSON data
 
 	// Test route to check if the API is working
 	api.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {

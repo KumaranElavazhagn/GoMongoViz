@@ -440,6 +440,102 @@ func (h *Handler) UploadCSV(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UploadJSON handles HTTP requests to upload JSON files containing sensor data
+// URL pattern: /api/upload-json
+func (h *Handler) UploadJSON(w http.ResponseWriter, r *http.Request) {
+	// Log request content type and method for debugging
+	log.Printf("JSON Upload Request Content-Type: %s, Method: %s", r.Header.Get("Content-Type"), r.Method)
+
+	// Handle OPTIONS preflight request
+	if r.Method == "OPTIONS" {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Check content type
+	contentType := r.Header.Get("Content-Type")
+	if !strings.Contains(contentType, "application/json") {
+		writeResponse(w, http.StatusBadRequest, map[string]string{
+			"error":   "Invalid content type",
+			"message": "Content-Type must be application/json",
+		})
+		return
+	}
+
+	// Read the request body
+	var sensorDataRecords []model.SensorData
+	err := json.NewDecoder(r.Body).Decode(&sensorDataRecords)
+	if err != nil {
+		writeResponse(w, http.StatusBadRequest, map[string]string{
+			"error":   "Failed to parse JSON data",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Validate that we received data
+	if len(sensorDataRecords) == 0 {
+		writeResponse(w, http.StatusBadRequest, map[string]string{
+			"error":   "No data provided",
+			"message": "JSON array is empty",
+		})
+		return
+	}
+
+	// Validate required fields for each record
+	for i, record := range sensorDataRecords {
+		// Set creation time
+		sensorDataRecords[i].CreatedAt = time.Now()
+
+		// Validate timestamp
+		if record.Timestamp.IsZero() {
+			writeResponse(w, http.StatusBadRequest, map[string]string{
+				"error":   "Invalid data",
+				"message": fmt.Sprintf("Record at index %d has missing or invalid timestamp", i),
+			})
+			return
+		}
+
+		// Validate object_id
+		if record.ObjectID == 0 {
+			writeResponse(w, http.StatusBadRequest, map[string]string{
+				"error":   "Invalid data",
+				"message": fmt.Sprintf("Record at index %d has missing object_id", i),
+			})
+			return
+		}
+
+		// Validate port_num
+		if record.PortNum == 0 {
+			writeResponse(w, http.StatusBadRequest, map[string]string{
+				"error":   "Invalid data",
+				"message": fmt.Sprintf("Record at index %d has missing port_num", i),
+			})
+			return
+		}
+	}
+
+	// Save the data to the database
+	err = h.service.SaveSensorData(sensorDataRecords)
+	if err != nil {
+		writeResponse(w, http.StatusInternalServerError, map[string]string{
+			"error":   "Failed to save sensor data",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Return success response
+	writeResponse(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("Successfully uploaded %d sensor data records", len(sensorDataRecords)),
+		"count":   len(sensorDataRecords),
+	})
+}
+
 // writeResponse is a helper function to write JSON responses
 // It sets appropriate headers, status code, and serializes the data to JSON
 func writeResponse(w http.ResponseWriter, code int, data interface{}) {

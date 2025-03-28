@@ -8,7 +8,7 @@ GoMongoViz is a full-stack sensor data visualization dashboard that allows users
 
 - **Data Visualization**: Interactive charts with zoom and pan functionality
 - **Real-time Monitoring**: View and analyze sensor data in real-time
-- **CSV Upload**: Upload sensor data via CSV files
+- **Multiple Upload Formats**: Upload sensor data via CSV or JSON files
 - **Filtering Capabilities**: Filter data by device, port, and time range
 - **Multi-metric Analysis**: Compare up to 3 metrics simultaneously
 - **Responsive Design**: Works on desktop and mobile devices
@@ -96,8 +96,11 @@ GoMongoViz/
 - `GET /api/ports/{objectId}` - Get ports for a specific object
 - `GET /api/data/{objectId}?port_num={portNum}` - Get data for a specific object and port
 - `POST /api/upload` - Upload and process CSV data
+- `POST /api/upload-json` - Upload and process JSON data
 
-## CSV Upload Format
+## Data Upload Formats
+
+### CSV Upload Format
 
 When uploading CSV files, ensure they follow this format:
 
@@ -117,31 +120,70 @@ When uploading CSV files, ensure they follow this format:
 
 You can download a sample CSV template from the upload modal.
 
+### JSON Upload Format
+
+When uploading JSON files, they should contain an array of objects with the following structure:
+
+**Required fields:**
+- `timestamp` - Format: "2023-09-01T10:00:00Z" (RFC3339 string)
+- `object_id` - Numeric sensor object identifier
+- `port_num` - Numeric port number
+
+**Optional fields include:**
+- `voltage`, `current`, `supply_current`, `supply_volt`, `voltage_drop`, `voc`, etc.
+
+Example JSON format:
+```json
+[
+  {
+    "timestamp": "2023-09-01T10:00:00Z",
+    "object_id": 1,
+    "port_num": 1,
+    "voltage": 12.5,
+    "current": 2.3,
+    "supply_current": 1.8,
+    "supply_volt": 24.0
+  },
+  {
+    "timestamp": "2023-09-01T10:05:00Z",
+    "object_id": 1,
+    "port_num": 1,
+    "voltage": 12.4,
+    "current": 2.4
+  }
+]
+```
+
+You can download a sample JSON template from the upload modal.
+
 ## File Upload Implementation
 
-The file upload is implemented using a direct `fetch` API call with `FormData` to ensure proper handling of multipart/form-data uploads. This approach avoids common Content-Type header issues that can occur with other HTTP clients.
+The application supports two types of file uploads:
+
+1. **CSV Upload**: Implemented using `FormData` and multipart/form-data encoding
+2. **JSON Upload**: Implemented using direct JSON posting with application/json content type
 
 ### Key File Upload Implementation Details
 
 1. **Frontend Implementation**
-   - The application uses native `FormData` API for building multipart requests
-   - Avoids manually setting Content-Type headers which can cause boundary issues
-   - Uses raw `fetch` API instead of axios for uploads to prevent Content-Type conflicts
-   - Implements proper error handling and feedback to the user
+   - CSV uploads use native `FormData` API for building multipart requests
+   - JSON uploads use `FileReader` to read file contents and send as JSON body
+   - Both methods include proper error handling and user feedback
+   - The interface provides a split-button approach for selecting upload type
 
 2. **Backend Implementation**
-   - Uses Go's `multipart` package to parse form data
-   - Validates file MIME types in a permissive way to support various CSV formats
-   - Implements robust error handling with detailed messages
-   - Handles CSV parsing and data validation with proper feedback
+   - CSV uploads are handled with Go's `multipart` package and CSV parser
+   - JSON uploads are processed using the standard JSON decoder
+   - Both methods validate data and provide detailed error messages
+   - Common data storage logic is reused between both upload types
 
 3. **Common Upload Issues**
-   - **Content-Type issues**: If the frontend sets a Content-Type header manually, the backend will reject the upload because it won't have the correct multipart boundary
+   - **Content-Type issues**: Each upload method requires different Content-Type headers
    - **CORS issues**: Preflight requests must be properly handled for file uploads
    - **File size limits**: The backend limits uploads to 10MB to prevent abuse
 
 4. **Debugging File Uploads**
-   - Backend logs include detailed information about incoming requests, including headers and content types
+   - Backend logs include detailed information about incoming requests
    - Frontend console logs show file information before upload
    - Error responses include detailed information about what went wrong
 
