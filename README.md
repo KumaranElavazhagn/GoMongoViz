@@ -154,10 +154,6 @@ The file upload is implemented using a direct `fetch` API call with `FormData` t
 
 The MongoDB connection is configured in `BE/database/db.go`. Update the credentials to match your MongoDB instance.
 
-## License
-
-[MIT License](LICENSE)
-
 ## Acknowledgements
 
 - [Chart.js](https://www.chartjs.org/)
