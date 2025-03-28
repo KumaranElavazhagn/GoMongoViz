@@ -63,7 +63,7 @@ GoMongoViz/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/GoMongoViz.git
+   git clone https://github.com/KumaranElavazhagn/GoMongoViz.git
    cd GoMongoViz
    ```
 
@@ -164,49 +164,3 @@ The MongoDB connection is configured in `BE/database/db.go`. Update the credenti
 - [React](https://reactjs.org/)
 - [Go](https://golang.org/)
 - [MongoDB](https://www.mongodb.com/)
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"Cannot POST /api/upload" Error**
-   - **Cause**: The backend server isn't running or there's a CORS issue
-   - **Solution**: 
-     - Ensure the backend server is running on port 8080
-     - Check the browser console for CORS errors
-     - Verify that the frontend is using the correct API URL
-
-2. **"request Content-Type isn't multipart/form-data" Error**
-   - **Cause**: The Content-Type header is incorrect or manually set in the request
-   - **Solution**:
-     - Don't manually set Content-Type header in upload requests
-     - Use the FormData API without modifying headers
-     - Use the fetch API directly instead of axios for file uploads
-
-3. **MongoDB Connection Issues**
-   - **Cause**: Incorrect MongoDB credentials or connection string
-   - **Solution**:
-     - Update credentials in `BE/database/db.go`
-     - Check MongoDB Atlas connection status
-     - Verify network connectivity to MongoDB
-
-4. **Missing Required Fields in CSV**
-   - **Cause**: The CSV file doesn't include all required fields
-   - **Solution**:
-     - Use the sample CSV template provided in the app
-     - Ensure all required fields are included
-     - Check field names for exact spelling and case
-
-5. **Frontend Not Connecting to Backend**
-   - **Cause**: Proxy configuration issues or incorrect API URLs
-   - **Solution**:
-     - Check `FE/package.json` for correct proxy configuration
-     - Verify base URL in `FE/src/api/Client.ts`
-     - Ensure the backend CORS configuration allows requests from the frontend
-
-### Debugging Tips
-
-- Check browser developer console (F12) for network requests and errors
-- Review backend logs for detailed request information
-- Use the sample CSV template for testing uploads
-- Ensure MongoDB connection is working properly 
