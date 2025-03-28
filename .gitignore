@@ -1,0 +1,42 @@
+# Go backend
+/BE/vendor/
+/BE/.env
+/BE/tmp/
+/BE/*.exe
+/BE/*.exe~
+/BE/*.dll
+/BE/*.so
+/BE/*.dylib
+/BE/*.test
+/BE/*.out
+/BE/go.work
+
+# React frontend
+/FE/node_modules
+/FE/.pnp
+/FE/.pnp.js
+/FE/coverage
+/FE/build
+/FE/.DS_Store
+/FE/.env.local
+/FE/.env.development.local
+/FE/.env.test.local
+/FE/.env.production.local
+/FE/npm-debug.log*
+/FE/yarn-debug.log*
+/FE/yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Log files
+*.log 
