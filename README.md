@@ -2,7 +2,7 @@
 
 GoMongoViz is a full-stack sensor data visualization dashboard that allows users to view, analyze, and upload sensor data stored in MongoDB. This application provides real-time monitoring of sensor metrics such as voltage, current, and other measurements with interactive charts and filtering capabilities.
 
-![Dashboard Screenshot](path-to-screenshot.png)
+![Dashboard Screenshot](sample_view.png)
 
 ## Features
 
