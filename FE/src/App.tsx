@@ -225,22 +225,17 @@ function App() {
     try {
       console.log('Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
       
-      // IMPORTANT: Using direct URL for upload rather than the Client.ts axios wrapper
-      // The fetch API handles multipart/form-data uploads better than axios in this case
-      // We must use the full URL (not relative) for direct API access
+
       const uploadUrl = 'http://localhost:8080/api/upload';
       
       // Log the file we're uploading for debugging
       console.log('FormData contains file:', file.name);
       
       // Use the fetch API for the upload
-      // CRITICAL: DO NOT manually set Content-Type header for multipart/form-data uploads
-      // The browser will automatically set the correct Content-Type with proper boundary
-      // Setting it manually will cause the backend to reject the upload
+
       const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
-        // No Content-Type header here - browser sets it automatically with boundary
       });
 
       // Get response text first to make debugging easier
